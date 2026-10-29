@@ -43,6 +43,7 @@ def main():
     ap.add_argument("--lr", type=float, default=2e-4)
     ap.add_argument("--workers", type=int, default=4)
     ap.add_argument("--out", default="checkpoints")
+    ap.add_argument("--cache", default=None, help="folder made by preprocess.py")
     args = ap.parse_args()
 
     dev = "cuda" if torch.cuda.is_available() else "cpu"
@@ -53,9 +54,9 @@ def main():
     print(f"{len(cases)} patients -> {len(train_cases)} train / {len(val_cases)} val ({dev})")
 
     p = (args.patch,) * 3
-    train_dl = DataLoader(TrainSet(train_cases, p), batch_size=args.batch, shuffle=True,
+    train_dl = DataLoader(TrainSet(train_cases, p, cache=args.cache), batch_size=args.batch, shuffle=True,
                           num_workers=args.workers, drop_last=True, pin_memory=True)
-    val_dl = DataLoader(ValSet(val_cases), batch_size=1, num_workers=args.workers)
+    val_dl = DataLoader(ValSet(val_cases, cache=args.cache), batch_size=1, num_workers=args.workers)
 
     model = UNet3D(4, 3, args.base).to(dev)
     opt = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=1e-5)
